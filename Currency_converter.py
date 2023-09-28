@@ -1,51 +1,56 @@
 import freecurrencyapi
 
-API_KEY = 'fca_live_7biV5oZKQwAkn7Ot9GMPTCuhAtnj6GxJ5DzI0BJt'
-
-def getting_currency_quotes(): 
-    client = freecurrencyapi.Client(API_KEY)
-    result = client.latest()
-    return result
-
-CURRENCIES = getting_currency_quotes()
-
-def checking_availability_currency(currencies):
-    while True:
-        current_currency = input('Введите исходную валюту: ')
-        if current_currency in currencies['data']:
-            break
-    while True:
-        result_currency = input('Введите результирующую валюту: ')
-        if result_currency in currencies['data']:
-            break
-    return current_currency, result_currency
-
-def convert(amount, from_currency, to_currency, currencies):
-    from_value = currencies.get(from_currency)
-    to_value = currencies.get(to_currency)
-    coefficient = to_value / from_value
-    return round(amount * coefficient, 2)
+def get_quotes_currency(): 
+    client = freecurrencyapi.Client('fca_live_7biV5oZKQwAkn7Ot9GMPTCuhAtnj6GxJ5DzI0BJt').latest()
+    return client['data']
+ 
+CURRENCIES = get_quotes_currency()
 
 def main(currencies):
-    status_actions = None
+    action = None
     print('''ДОБРО ПОЖАЛОВАТЬ В КОНВЕРТ ВАЛЮТ!
 
 1 - Список валют с ценами
 2 - Конверт валют
 0 - Выход''')
-    while status_actions != '0':
-        status_actions = input('\nНажмите для просмотра: ')
-        if status_actions == '1':
-            print('\nСПИСОК ВАЛЮТ С ЦЕНАМИ\n')       
-            for i in currencies['data']:
-                print(f'{i} = {round(CURRENCIES["data"][i], 2)}')       
-        elif status_actions == '2':
+    while action != '0':
+        action = input('\nНажмите для просмотра: ')
+        if action == '1':
+            print('\nСПИСОК ВАЛЮТ С ЦЕНАМИ\n')
+            for key in currencies:
+                print(f'{key} = {round(currencies[key], 2)}')
+        elif action == '2':
             print('\nКОНВЕРТ ВАЛЮТ\n')
-            currency = checking_availability_currency(currencies)
-            amount = input("Введите количество: ")
-            result = convert(float(amount), currency[0], currency[1], currencies['data'])
-            print(f'\n{amount} {currency[0]} = {result} {currency[1]}')
+            value_current_currency = input('Введите исходную валюту: ')
+            current_currency = check_availability_currency(currencies, value_current_currency)
+            value_result_currency = input('Введите результирующую валюту: ')
+            result_currency = check_availability_currency(currencies, value_result_currency)
+            amount = check_amount()
+            result = convert_currency(currencies, amount, current_currency, result_currency)
+            print(f'\n{amount} {current_currency} = {result} {result_currency}')
     print('\nДО НОВЫХ ВСТРЕЧ!')
+
+def check_availability_currency(currencies, value_currency):
+    while True:
+        if value_currency in currencies:
+            return value_currency
+        print('\nОШИБКА. Такой валюты нет!')
+        value_currency = input('\nВведите другую валюту: ')
+
+def check_amount():
+    while True:
+        try:
+            value_amount = input('Введите количество: ')
+            value_amount = float(value_amount)
+            return value_amount
+        except ValueError:
+            print('\nОШИБКА. Неверное значение!\n')
+
+def convert_currency(currencies, amount, current_currency, result_currency):
+    from_value = currencies.get(current_currency)
+    to_value = currencies.get(result_currency)
+    coefficient = to_value / from_value
+    return round(amount * coefficient, 2)
 
 if __name__ == '__main__':
     main(CURRENCIES)
